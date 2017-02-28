@@ -15,9 +15,4 @@ public class VolleyJsonRequest extends JsonArrayRequest {
     public VolleyJsonRequest(String url, Response.Listener<JSONArray> listener, Response.ErrorListener errorListener) {
         super(url, listener, errorListener);
     }
-
-    @Override
-    public Priority getPriority() {
-        return Priority.HIGH;
-    }
 }

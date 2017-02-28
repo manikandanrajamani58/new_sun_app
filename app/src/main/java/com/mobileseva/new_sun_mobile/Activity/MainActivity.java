@@ -3,7 +3,6 @@ package com.mobileseva.new_sun_mobile.Activity;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -13,54 +12,28 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.Volley;
-import com.google.gson.Gson;
+import com.mobileseva.new_sun_mobile.Adapter.FeedAdapter;
 import com.mobileseva.new_sun_mobile.Mapper.FeedMapper;
-import com.mobileseva.new_sun_mobile.MyJsonObjectRequest;
+import com.mobileseva.new_sun_mobile.Network.VolleyConnection;
 import com.mobileseva.new_sun_mobile.R;
 
-import org.json.JSONArray;
-
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, VolleyConnection.APIFeeds {
 
-    RequestQueue requestQueue;
     FeedMapper[] object;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Get the JSON
-        requestQueue = Volley.newRequestQueue(this);
+        VolleyConnection volleyConnection = new VolleyConnection();
+        volleyConnection.getInstance(this);
+        volleyConnection.fetchFeeds(this);
 
-        MyJsonObjectRequest myJsonObjectRequest = new MyJsonObjectRequest("http://10.195.169.157:8000/feed.json",new Response.Listener<JSONArray>() {
-            @Override
-            public void onResponse(JSONArray response) {
-                if (response != null) {
-                    Gson gson = new Gson();
-                    object = gson.fromJson(String.valueOf(response),FeedMapper[].class);
-                }
-            }
-        }   , new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.w("Error:", error);
-            }
-        });
-
-
-        myJsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(0, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-        myJsonObjectRequest.setTag("jsonRequest");
-        requestQueue.add(myJsonObjectRequest);
-
-
+        //Toolbar and slide menu
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -140,9 +113,16 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    public void showJson(FeedMapper[] feedMappers){
+        //Show the ListView
+        FeedAdapter feedAdapter = new FeedAdapter(this, feedMappers);
+        ListView listView = (ListView) findViewById(R.id.listView);
+        listView.setAdapter(feedAdapter);
+    }
+
+
     @Override
-    protected void onStop() {
-        super.onStop();
-        requestQueue.cancelAll("jsonRequest");
+    public void OnFeedCompleted(FeedMapper[] feedMappers) {
+        showJson(feedMappers);
     }
 }
